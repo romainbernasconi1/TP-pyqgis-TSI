@@ -22,14 +22,13 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QLocale, QTranslator, QCoreApplication
-from qgis.core import QgsSettings
+from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 # Import the code for the dialog
 from .mon_extension_dialog import MonExtensionDialog
 import os.path
-
 
 class MonExtension:
     """QGIS Plugin Implementation."""
@@ -48,10 +47,7 @@ class MonExtension:
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
         locale = QgsSettings().value('locale/userLocale', QLocale().name())[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            '{}.qm'.format(locale))
+        locale_path = os.path.join(self.plugin_dir, 'i18n', '{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -169,7 +165,6 @@ class MonExtension:
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -178,6 +173,13 @@ class MonExtension:
                 action)
             self.iface.removeToolBarIcon(action)
 
+    def liste_couches(self):
+        project = QgsProject.instance()
+        """ Parcours les couches du projet en cours et les affiche dans la comboBox """
+        for layer in project.mapLayers().values():
+            """ Ne sélectionne que les géométries correspondant à des points """
+            if layer.geometryType() == QgsWkbTypes.PointGeometry:
+                self.dlg.comboBox_couches.addItem(layer.name())
 
     def run(self):
         """Run method that performs all the real work"""
@@ -188,6 +190,8 @@ class MonExtension:
             self.first_start = False
             self.dlg = MonExtensionDialog()
 
+        self.liste_couches()
+        
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop

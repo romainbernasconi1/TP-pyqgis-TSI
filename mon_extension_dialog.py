@@ -35,7 +35,6 @@ FORM_CLASS, _ = uic.loadUiType(
     from_imports=True,
     import_from='mon_extension')
 
-
 class MonExtensionDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""

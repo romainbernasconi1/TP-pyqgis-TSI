@@ -21,6 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
+
+import requests
+
 from qgis.PyQt.QtCore import QLocale, QTranslator, QCoreApplication
 from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.PyQt.QtGui import QIcon
@@ -193,16 +196,27 @@ class MonExtension:
 
         # Transformation du point en WGS84
         point_wgs84 = reproject.transform(point)
-        print(point_wgs84)
 
         # Arrondi des points pour l'affichage dans le plugin
         lon = round(point_wgs84.x(), 5)
         lat = round(point_wgs84.y(), 5)
-        print(lon,lat)
 
         # Affichage des coordonnées arrondies dans les zones de texte
         self.dlg.lineEdit_lon.setText(str(lon))
         self.dlg.lineEdit_lat.setText(str(lat))
+
+        # Recherche de l'adresse BAN la plus proche du point cliqué
+        url = 'https://data.geopf.fr/geocodage/reverse'
+        request = requests.get(url, params = {"type":"housenumber","limit":1,"lon":lon,"lat":lat})
+        result_json = request.json()
+
+        # Récupération de l'information nécessaire de l'adresse
+        label_address = result_json['features'][0]['properties']['label']
+        print(label_address)
+
+        # Affichage de l'adresse dans la zone de texte
+        self.dlg.lineEdit_adresse.setText(label_address)
+
 
     def run(self):
         """Run method that performs all the real work"""

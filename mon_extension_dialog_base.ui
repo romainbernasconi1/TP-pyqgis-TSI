@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>544</width>
-    <height>191</height>
+    <width>546</width>
+    <height>206</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>521</width>
-     <height>178</height>
+     <height>182</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -61,6 +61,20 @@
       </item>
       <item>
        <widget class="QLineEdit" name="lineEdit_lat"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_adresse">
+        <property name="text">
+         <string>Adresse:    </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit_adresse"/>
       </item>
      </layout>
     </item>

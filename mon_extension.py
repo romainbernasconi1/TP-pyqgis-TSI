@@ -22,9 +22,10 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QLocale, QTranslator, QCoreApplication
-from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes
+from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.gui import QgsCrsDefinitionWidget, QgsMapTool, QgsMapToolEmitPoint
 
 # Import the code for the dialog
 from .mon_extension_dialog import MonExtensionDialog
@@ -174,12 +175,34 @@ class MonExtension:
             self.iface.removeToolBarIcon(action)
 
     def liste_couches(self):
-        project = QgsProject.instance()
         """ Parcours les couches du projet en cours et les affiche dans la comboBox """
+        project = QgsProject.instance()
         for layer in project.mapLayers().values():
-            """ Ne sélectionne que les géométries correspondant à des points """
-            if layer.geometryType() == QgsWkbTypes.PointGeometry:
+            """ Ne sélectionne que les géométries vecteurs correspondant à des points """
+            if (layer.type() == QgsMapLayer.VectorLayer and layer.geometryType() == QgsWkbTypes.PointGeometry):
                 self.dlg.comboBox_couches.addItem(layer.name())
+
+    def displayPoint(self, point):
+        """ Méthode effectué à chaque clic sur la carte Qgis """
+        # Récupération des systèmes de coordonnées de référence pour la conversion
+        scr_canvas = QgsProject.instance().crs()
+        scr_wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
+        
+        # Reprojection en WGS84
+        reproject = QgsCoordinateTransform(scr_canvas, scr_wgs84, QgsProject.instance())
+
+        # Transformation du point en WGS84
+        point_wgs84 = reproject.transform(point)
+        print(point_wgs84)
+
+        # Arrondi des points pour l'affichage dans le plugin
+        lon = round(point_wgs84.x(), 5)
+        lat = round(point_wgs84.y(), 5)
+        print(lon,lat)
+
+        # Affichage des coordonnées arrondies dans les zones de texte
+        self.dlg.lineEdit_lon.setText(str(lon))
+        self.dlg.lineEdit_lat.setText(str(lat))
 
     def run(self):
         """Run method that performs all the real work"""
@@ -191,7 +214,17 @@ class MonExtension:
             self.dlg = MonExtensionDialog()
 
         self.liste_couches()
-        
+
+        # Création de l'ajout d'un outil d’émission de point au clic sur la carte 
+        self.canvas = self.iface.mapCanvas()
+        self.pointTool = QgsMapToolEmitPoint(self.canvas)
+
+        # Association du click à la méthode displayPoint
+        self.pointTool.canvasClicked.connect(self.displayPoint)
+
+        # rend l'outil actif sur la carte
+        self.canvas.setMapTool(self.pointTool)
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop

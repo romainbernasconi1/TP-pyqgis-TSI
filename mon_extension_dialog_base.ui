@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>521</width>
-     <height>91</height>
+     <height>178</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -32,6 +32,37 @@
     </item>
     <item>
      <widget class="QComboBox" name="comboBox_couches"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_click">
+      <property name="text">
+       <string>Point cliqué:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label_lon">
+        <property name="text">
+         <string>Longitude:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit_lon"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_lat">
+        <property name="text">
+         <string>Latitude:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit_lat"/>
+      </item>
+     </layout>
     </item>
     <item>
      <widget class="QDialogButtonBox" name="button_box">

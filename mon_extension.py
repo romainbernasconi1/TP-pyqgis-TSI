@@ -211,12 +211,14 @@ class MonExtension:
         result_json = request.json()
 
         # Récupération de l'information nécessaire de l'adresse
-        label_address = result_json['features'][0]['properties']['label']
-        print(label_address)
+        numero = result_json['features'][0]['properties']['housenumber']
+        nom_voie = result_json['features'][0]['properties']['street']
+        code_insee = result_json['features'][0]['properties']['citycode']
+        nom_commune = result_json['features'][0]['properties']['city']
 
         # Affichage de l'adresse dans la zone de texte
-        self.dlg.lineEdit_adresse.setText(label_address)
-
+        adresse = f"{numero} {nom_voie}, {code_insee} {nom_commune}"
+        self.dlg.lineEdit_adresse.setText(adresse)
 
     def run(self):
         """Run method that performs all the real work"""

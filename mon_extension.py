@@ -29,6 +29,8 @@ from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes, QgsCoor
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.gui import QgsCrsDefinitionWidget, QgsMapTool, QgsMapToolEmitPoint, QgsMessageBar
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt
 
 # Import the code for the dialog
 from .mon_extension_dialog import MonExtensionDialog
@@ -237,18 +239,34 @@ class MonExtension:
         # Création du buffer autour du point cliqué
         geom_point = QgsGeometry.fromPointXY(point)
         buffer = geom_point.buffer(distance_metres, 10)
-        buffer_wgs84 = buffer.transform(reproject)
+        buffer.transform(reproject)
 
         # Comptage des objets de la couche sélectionnée dans le buffer
-        print(buffer_wgs84)
         count = 0
         for feature in current_layers[0].getFeatures():
-            print(feature.geometry())
             if feature.geometry().intersects(buffer):
                 count += 1
 
         # Affichage du compteur dans la zone de texte
         self.dlg.lineEdit_objets_1.setText(str(count))
+
+        # Création de la couche buffer temporaire
+        #self.buffer_layer = QgsVectorLayer("Polygon", "buffer_temp", "memory")
+
+        # Récupération du fournisseur de données
+        provider = self.buffer_layer.dataProvider()
+
+        # Supression des données
+        #current_data = self.buffer_layer.getFeatures()
+        provider.truncate()
+
+        # Création d'une nouvelle entité
+        feature_buffer = QgsFeature()
+        feature_buffer.setGeometry(buffer)
+
+        # Ajout des nouvelles données
+        provider.addFeatures([feature_buffer])
+        self.buffer_layer.triggerRepaint()
 
     def run(self):
         """Run method that performs all the real work"""
@@ -258,7 +276,18 @@ class MonExtension:
         if self.first_start == True:
             self.first_start = False
             self.dlg = MonExtensionDialog()
-
+        
+        # Création du layer buffer
+        if (len(QgsProject.instance().mapLayersByName('buffer_temp')) == 0):
+            self.buffer_layer = QgsVectorLayer("Polygon", "buffer_temp", "memory")
+            # Affichage du layer buffer
+            QgsProject.instance().addMapLayer(self.buffer_layer)
+            symbol = self.buffer_layer.renderer().symbol()
+            symbol_layer = symbol.symbolLayer(0)
+            symbol_layer.setStrokeColor(QColor("#000000"))
+            symbol_layer.setStrokeWidth(0.4)
+            symbol_layer.setBrushStyle(Qt.NoBrush)
+        
         self.liste_couches()
 
         # Création de l'ajout d'un outil d’émission de point au clic sur la carte 
@@ -272,10 +301,11 @@ class MonExtension:
         self.canvas.setMapTool(self.pointTool)
 
         # Définie une valeur par défaut pour la distance autour d'un point
-        self.dlg.lineEdit_objets_2.setText('100')
+        self.dlg.lineEdit_objets_2.setText('1000')
 
         # show the dialog
         self.dlg.show()
+
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed

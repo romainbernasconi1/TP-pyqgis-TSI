@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Mon super Extension</string>
+   <string>Mon Extension</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>

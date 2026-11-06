@@ -25,10 +25,10 @@
 import requests
 
 from qgis.PyQt.QtCore import QLocale, QTranslator, QCoreApplication
-from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsSettings, QgsProject, QgsMapLayer, QgsWkbTypes, QgsCoordinateReferenceSystem, QgsCoordinateTransform, Qgis, QgsGeometry, QgsVectorLayer, QgsFeature
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-from qgis.gui import QgsCrsDefinitionWidget, QgsMapTool, QgsMapToolEmitPoint
+from qgis.gui import QgsCrsDefinitionWidget, QgsMapTool, QgsMapToolEmitPoint, QgsMessageBar
 
 # Import the code for the dialog
 from .mon_extension_dialog import MonExtensionDialog
@@ -220,6 +220,36 @@ class MonExtension:
         adresse = f"{numero} {nom_voie}, {code_insee} {nom_commune}"
         self.dlg.lineEdit_adresse.setText(adresse)
 
+        # Récupération de la distance
+        distance_object = self.dlg.lineEdit_objets_2.text()
+
+        # Vérification que la distance est un nombre entier et création d'un message d'erreur si ce n'est pas le cas
+        try:
+            distance_metres = int(distance_object)
+        except ValueError:
+            self.iface.messageBar().pushMessage("Erreur", "La valeur doit obligatoirement être un nombre entier", level=Qgis.Critical, duration=5)
+            return
+
+        # Récupération de la couche points sélectionnée dans le combobox
+        layer_name = self.dlg.comboBox_couches.currentText()
+        current_layers = QgsProject.instance().mapLayersByName(layer_name)
+
+        # Création du buffer autour du point cliqué
+        geom_point = QgsGeometry.fromPointXY(point)
+        buffer = geom_point.buffer(distance_metres, 10)
+        buffer_wgs84 = buffer.transform(reproject)
+
+        # Comptage des objets de la couche sélectionnée dans le buffer
+        print(buffer_wgs84)
+        count = 0
+        for feature in current_layers[0].getFeatures():
+            print(feature.geometry())
+            if feature.geometry().intersects(buffer):
+                count += 1
+
+        # Affichage du compteur dans la zone de texte
+        self.dlg.lineEdit_objets_1.setText(str(count))
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -241,6 +271,9 @@ class MonExtension:
         # rend l'outil actif sur la carte
         self.canvas.setMapTool(self.pointTool)
 
+        # Définie une valeur par défaut pour la distance autour d'un point
+        self.dlg.lineEdit_objets_2.setText('100')
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
@@ -250,3 +283,5 @@ class MonExtension:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+
